@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/drone-go/plugin/secret"
+	log "github.com/sirupsen/logrus"
 )
 
 // New returns a new secret plugin.
@@ -30,7 +31,17 @@ type plugin struct {
 
 func (p *plugin) Find(ctx context.Context, req *secret.Request) (*drone.Secret, error) {
 
+	fields := log.Fields{
+		"name":  req.Name,
+		"path":  req.Path,
+		"build": req.Build.Number,
+		"repo":  req.Repo.Name,
+	}
+
+	log.WithFields(fields).Info("secret requested")
+
 	if req.Name == "" {
+		log.WithFields(fields).Error("invalid or missing secret name")
 		return nil, errors.New("invalid or missing secret name")
 	}
 
@@ -42,6 +53,7 @@ func (p *plugin) Find(ctx context.Context, req *secret.Request) (*drone.Secret, 
 	).Send(ctx)
 
 	if err != nil {
+		log.WithFields(fields).WithError(err).Error("unable to retrieve parameters from SSM")
 		return nil, fmt.Errorf("couldn't retrieve parameter from SSM: %s", err)
 	}
 
