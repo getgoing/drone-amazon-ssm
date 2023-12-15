@@ -1,3 +1,4 @@
+load("@common//:images.star", "find_image")
 load("@common//:steps.star", "notify_author")
 load("@common//:utils.star", "ECR_URL", "retrieve_parameter")
 
@@ -16,7 +17,7 @@ def build_pipeline(ctx):
             generate_tags_file(ctx),
             {
                 "name": "build and push drone ecs deploy image",
-                "image": "plugins/ecr",
+                "image": find_image("plugins/ecr"),
                 "settings": {
                     "registry": ECR_URL,
                     "repo": "drone-plugin/amazon-ssm",
@@ -40,7 +41,7 @@ def generate_tags_file(ctx):
 
     return {
         "name": "generate tags file",
-        "image": "alpine:3.11.5",
+        "image": find_image('alpine'),
         "commands": [
             'echo -n "$(cat version),$DRONE_BUILD_NUMBER,latest,{}" > .tags'.format(commit_sha),
         ],
